@@ -25,21 +25,21 @@ type AcceptLanguage struct {
 	Q      float32
 }
 
-func (a AcceptLanguage) String() string {
+func (a *AcceptLanguage) String() string {
 	return fmt.Sprintf("%s-%s", a.Lang, a.Locale)
 }
 
-type AcceptLanguages []AcceptLanguage
+type AcceptLanguages []*AcceptLanguage
 
 func (a AcceptLanguages) Len() int           { return len(a) }
 func (a AcceptLanguages) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a AcceptLanguages) Less(i, j int) bool { return a[i].Q > a[j].Q }
 
-func (a AcceptLanguages) First() AcceptLanguage {
+func (a AcceptLanguages) One() *AcceptLanguage {
 	if len(a) > 0 {
 		return a[0]
 	}
-	return AcceptLanguage{Lang: DefaultLang, Locale: DefaultLocale}
+	return &AcceptLanguage{Lang: DefaultLang, Locale: DefaultLocale}
 }
 
 func DecodeAcceptLanguages(h http.Header) AcceptLanguages {
@@ -62,7 +62,7 @@ func DecodeAcceptLanguages(h http.Header) AcceptLanguages {
 	return languages
 }
 
-func decodeLanguage(s string) (AcceptLanguage, error) {
+func decodeLanguage(s string) (*AcceptLanguage, error) {
 	f := strings.Split(s, ";")
 	langWithLocale := f[0]
 	q := float64(1)
@@ -77,9 +77,9 @@ func decodeLanguage(s string) (AcceptLanguage, error) {
 		lang = Lang(strings.ToLower(langWithLocale[:2]))
 		locale = Locale(strings.ToUpper(langWithLocale[3:]))
 	} else {
-		return AcceptLanguage{}, errors.New("invalid language")
+		return nil, errors.New("invalid language")
 	}
-	return AcceptLanguage{
+	return &AcceptLanguage{
 		Lang:   lang,
 		Locale: locale,
 		Q:      float32(q),

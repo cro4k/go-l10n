@@ -17,7 +17,7 @@ import "github.com/cro4k/go-l10n"
 
 func main() {
     // load translation files
-    trans, err := l10n.NewFromFile("./l10n")
+    trans, err := l10n.NewFromFiles("./l10n")
     if err != nil{
         panic(err)
     }
@@ -47,7 +47,7 @@ func main() {
     }
 
     // load translation files
-    trans, err := l10n.NewFromFile("./l10n")
+    trans, err := l10n.NewFromFiles("./l10n")
     if err != nil {
         panic(err)
     }
@@ -92,7 +92,7 @@ func main() {
     }
 
     // load translation files
-    trans, err := l10n.NewFromFile("./l10n")
+    trans, err := l10n.NewFromFiles("./l10n")
     if err != nil {
         panic(err)
     }

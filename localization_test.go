@@ -16,7 +16,7 @@ func expect(t *testing.T, trans Translations, lang Lang, code string, exp string
 }
 
 func TestLocalization(t *testing.T) {
-	trans, err := NewFromFile("l10n-example")
+	trans, err := NewFromFiles("l10n-example")
 	if err != nil {
 		t.Error(err)
 		return

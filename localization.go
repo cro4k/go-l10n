@@ -1,7 +1,9 @@
 package l10n
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -33,7 +35,7 @@ const (
 )
 
 const (
-	DefaultL10NPath = "./l10n"
+	DefaultL10NPath = "l10n"
 )
 
 var (
@@ -99,7 +101,7 @@ func (t Translations) Translate(lang Lang, code string) (*Text, error) {
 	return result, nil
 }
 
-func UnmarshalTranslation(data []byte) (*Translation, error) {
+func Unmarshal(data []byte) (*Translation, error) {
 	tran := new(Translation)
 	err := yaml.Unmarshal(data, &tran)
 	if err != nil {
@@ -109,8 +111,25 @@ func UnmarshalTranslation(data []byte) (*Translation, error) {
 	return tran, nil
 }
 
-// NewFromFile decode translations config form file, only support yaml format in default.
-func NewFromFile(path string) (Translations, error) {
+func LangFromFilename(filename string) (Lang, error) {
+	if name := filepath.Base(filename); len(name) != 7 || name[2:] != ".yaml" {
+		return "", errors.New("invalid language file")
+	} else {
+		return Lang(strings.ToLower(name[:2])), nil
+	}
+}
+
+func UnmarshalFromFile(file io.ReadCloser) (*Translation, error) {
+	defer file.Close()
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	return Unmarshal(data)
+}
+
+// NewFromFiles decode translations config form file, only support yaml format in default.
+func NewFromFiles(path string) (Translations, error) {
 	if path == "" {
 		path = DefaultL10NPath
 	}
@@ -122,18 +141,15 @@ func NewFromFile(path string) (Translations, error) {
 		if info.IsDir() {
 			return filepath.SkipDir
 		}
-		var lang Lang
-		if name := filepath.Base(filename); len(name) != 7 || name[2:] != ".yaml" {
+		lang, err := LangFromFilename(filename)
+		if err != nil {
 			return nil
-		} else {
-			lang = Lang(strings.ToLower(name[:2]))
 		}
-
-		data, err := os.ReadFile(filename)
+		file, err := os.Open(filename)
 		if err != nil {
 			return err
 		}
-		tran, err := UnmarshalTranslation(data)
+		tran, err := UnmarshalFromFile(file)
 		if err != nil {
 			return err
 		}
@@ -141,4 +157,21 @@ func NewFromFile(path string) (Translations, error) {
 		return nil
 	})
 	return trans, err
+}
+
+func NewFromFS(fs fs.FS, files ...string) (Translations, error) {
+	trans := make(Translations)
+	for _, filename := range files {
+		file, err := fs.Open(filename)
+		if err != nil {
+			return nil, err
+		}
+		lang, err := LangFromFilename(filename)
+		if err != nil {
+			return nil, err
+		}
+		tran, err := UnmarshalFromFile(file)
+		trans[lang] = tran
+	}
+	return trans, nil
 }
