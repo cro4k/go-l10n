@@ -42,6 +42,14 @@ func (t *Translator) Translate(ctx context.Context, lang *AcceptLanguage, v any)
 	return t.translate(ctx, lang, val)
 }
 
+func (t *Translator) SupportedLanguages() []Lang {
+	languages := make([]Lang, 0, len(t.translations))
+	for lang := range t.translations {
+		languages = append(languages, lang)
+	}
+	return languages
+}
+
 func (t *Translator) translate(ctx context.Context, lang *AcceptLanguage, val reflect.Value) error {
 	for val.Kind() == reflect.Ptr {
 		val = val.Elem()
