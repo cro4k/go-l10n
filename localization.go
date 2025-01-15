@@ -68,7 +68,18 @@ type Metadata map[string]string
 type Translation struct {
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	Items    []*Text  `json:"items"    yaml:"items"`
-	m        map[string]*Text
+
+	m map[string]*Text
+}
+
+func (t *Translation) Rebuild() {
+	if len(t.m) == len(t.Items) {
+		return
+	}
+	t.m = make(map[string]*Text)
+	for _, item := range t.Items {
+		t.m[item.Code] = item
+	}
 }
 
 type Translations map[Lang]*Translation
@@ -94,10 +105,7 @@ func UnmarshalTranslation(data []byte) (*Translation, error) {
 	if err != nil {
 		return nil, err
 	}
-	tran.m = make(map[string]*Text)
-	for _, item := range tran.Items {
-		tran.m[item.Code] = item
-	}
+	tran.Rebuild()
 	return tran, nil
 }
 
